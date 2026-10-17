@@ -55,9 +55,11 @@ import coil3.compose.AsyncImage
 @Composable
 fun ItemIcon(item: ItemInfo, size: Int = 40) {
     val app = LocalApp.current
+    // Pictures come from GitHub, so they follow the same "keep the item list up to date" switch in Settings.
+    val online by app.settings.state.collectAsState()
     Box(Modifier.size(size.dp).clip(RoundedCornerShape(8.dp)).background(B.c.input), contentAlignment = Alignment.Center) {
         AsyncImage(
-            model = app.items.iconUrl(item.shortname),
+            model = if (online.useOnlineItemList) app.items.iconUrl(item.shortname) else null,
             contentDescription = item.name,
             contentScale = ContentScale.Fit,
             modifier = Modifier.size((size - 6).dp),
