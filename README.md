@@ -4,7 +4,7 @@ The Bunker Rust server admin console, in your pocket. Native Android (Kotlin, Je
 your server over **WebRCON** and nowhere else: no accounts, no analytics.
 
 It shares its look (colours, logo, wordmark) and its behaviour (RCON commands, parsing, reconnect timings, chat handling,
-console filters) with the [Windows app](../Bunker-Application). The widgets system is not part of the phone app yet.
+console filters) with the [Windows app](https://github.com/Russ773/Bunker-Windows). The widgets system is not part of the phone app yet.
 
 ## Features
 
