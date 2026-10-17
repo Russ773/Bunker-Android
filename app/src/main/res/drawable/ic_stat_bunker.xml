@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <!-- Status-bar glyph: the Bunker hexagon with the prompt chevron. -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="40"
+        android:strokeLineJoin="round"
+        android:pathData="M256,56 L430,156 L430,356 L256,456 L82,356 L82,156 Z" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="46"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M190,190 L282,256 L190,322" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="46"
+        android:strokeLineCap="round"
+        android:pathData="M304,324 L354,324" />
+</vector>

@@ -1,0 +1,18 @@
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+app/build/
+*.jks
+*.keystore
+keystore.properties
+
+# Locally built installers (build them with gradlew, do not commit them)
+store/*.apk
+*.aab
+hs_err_pid*.log

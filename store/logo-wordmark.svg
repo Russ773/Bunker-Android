@@ -1,0 +1,15 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 560" width="1300" height="560">
+  <rect width="1300" height="560" rx="32" fill="#14161a"/>
+  <svg x="40" y="24" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#14161a"/>
+  <polygon points="256,56 430,156 430,356 256,456 82,356 82,156" fill="#1d2026" stroke="#e0592a" stroke-width="26" stroke-linejoin="round"/>
+  <g fill="#e0592a">
+    <circle cx="256" cy="92" r="9"/><circle cx="395" cy="172" r="9"/><circle cx="395" cy="340" r="9"/>
+    <circle cx="256" cy="420" r="9"/><circle cx="117" cy="340" r="9"/><circle cx="117" cy="172" r="9"/>
+  </g>
+  <polyline points="190,190 282,256 190,322" fill="none" stroke="#e6e8ec" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="304" y1="324" x2="354" y2="324" stroke="#e0592a" stroke-width="38" stroke-linecap="round"/>
+</svg>
+  <text x="600" y="316" font-family="'Segoe UI Black','Arial Black',sans-serif" font-size="150" fill="#e6e8ec" letter-spacing="6">BUNKER</text>
+  <text x="608" y="382" font-family="'Segoe UI','Arial',sans-serif" font-size="34" fill="#f06a2c" letter-spacing="9">RUST SERVER ADMIN</text>
+</svg>
