@@ -24,7 +24,7 @@
 | **Permissions** | `INTERNET`, `ACCESS_NETWORK_STATE`, `POST_NOTIFICATIONS`, `FOREGROUND_SERVICE(_SPECIAL_USE)`. |
 | **Data safety** | Collects: nothing. Shares: nothing. The app sends data only to the user's own game server and downloads the public Rust item list/pictures from GitHub. Passwords are stored encrypted on the device. No analytics, no ads, no accounts. Data deletion: uninstall the app (all data is local). |
 | **Content rating** | Utility/tools. The app administers a game server but contains no game content. |
-| **Privacy policy URL** | Needed. The website's `privacy.html` and `PRIVACY.md` currently describe the Windows app (Windows DPAPI). Add an Android paragraph: encrypted with the Android Keystore, only your server and GitHub (item list) are contacted, no analytics. |
+| **Privacy policy URL** | `https://getbunker.app/privacy.html`. The page now covers Android (Keystore, notifications, background connection, app lock), but the updated `privacy.html` in `Bunker-Website` must be **uploaded to the site** before you submit. |
 | **App category** | Tools (or Productivity). |
 | **Trademark** | Make sure the listing says it is not affiliated with Facepunch. The wordmark says "Rust server admin", which is descriptive, but avoid the Rust logo/art in screenshots. |
 
