@@ -211,6 +211,7 @@ cd Bunker-Android
 node tools/mock-rcon-server.js                       # port 28016, password "test"
 node tools/mock-rcon-server.js --port 28017 --name "US Vanilla"   # a second server for Multi Server
 node tools/mock-rcon-server.js --noplugin            # pretend the BunkerChat plugin is missing
+node tools/mock-rcon-server.js --players 40 --joining 1 --fast   # a busy server (handy for screenshots)
 ```
 
 It answers `serverinfo`, `playerlist`, `banlistex`, a real Carbon plugin list and the common admin commands, sends console noise and chat, and makes players come and go. From the Android emulator the host PC is **`10.0.2.2`**, so add a server with address `10.0.2.2`, port `28016`, password `test`. A wrong password gets the socket closed at once, like Rust does.

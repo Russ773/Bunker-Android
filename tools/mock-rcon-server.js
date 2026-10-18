@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // A pretend Rust WebRCON server for testing Bunker without a real game server. No dependencies.
 //
-//   node tools/mock-rcon-server.js [--port 28016] [--password test] [--name "My Server"] [--noplugin] [--fast]
+//   node tools/mock-rcon-server.js [--port 28016] [--password test] [--name "My Server"] [--players 6] [--joining 1] [--noplugin] [--fast]
 //
 // From the Android emulator the host PC is 10.0.2.2, so add a server with address 10.0.2.2, port 28016, password "test".
 // It answers serverinfo / playerlist / banlistex and common admin commands, sends console noise and chat,
@@ -16,6 +16,8 @@ const PORT = parseInt(arg('port', '28016'), 10);
 const PASSWORD = arg('password', 'test');
 const NO_PLUGIN = flag('noplugin');
 const FAST = flag('fast');
+const START_PLAYERS = parseInt(arg('players', '6'), 10);   // how many players are online at the start
+const JOINING = parseInt(arg('joining', '-1'), 10);       // -1 = random, otherwise always this many joining
 const NAME = arg('name', 'Bunker Test Server [PVE x2]');
 const fs = require('fs');
 const path = require('path');
@@ -36,11 +38,11 @@ function addPlayer(name) {
   return p;
 }
 function rand(n) { return Math.floor(Math.random() * n); }
-for (let i = 0; i < 6; i++) { const p = addPlayer(); p.joined -= rand(7200) * 1000; }
+for (let i = 0; i < START_PLAYERS; i++) { const p = addPlayer(); p.joined -= rand(7200) * 1000; }
 
 function serverInfo() {
   return JSON.stringify({
-    Hostname: NAME, MaxPlayers: maxPlayers, Players: players.length, Queued: 0, Joining: rand(3) === 0 ? 1 : 0,
+    Hostname: NAME, MaxPlayers: maxPlayers, Players: players.length, Queued: 0, Joining: JOINING >= 0 ? JOINING : (rand(3) === 0 ? 1 : 0),
     EntityCount: 180000 + rand(2000), GameTime: `${String(timeHour).padStart(2, '0')}:00:00`, Uptime: Math.floor((Date.now() - started) / 1000) + 86400 * 2 + 5000,
     Map: 'Procedural Map', Framerate: Math.round((30 + Math.random() * 28) * 10) / 10, Memory: 6200 + rand(300), MemoryUsageSystem: 8400, Collections: 12, NetworkIn: 100, NetworkOut: 200, Restarting: false, SaveCreatedTime: new Date().toISOString(),
   });
