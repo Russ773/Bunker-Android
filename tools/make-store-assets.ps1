@@ -118,3 +118,26 @@ $out = Join-Path $outDir 'feature-graphic.png'
 $bmp.Save($out, [System.Drawing.Imaging.ImageFormat]::Png)
 $g.Dispose(); $bmp.Dispose(); $logo.Dispose()
 "wrote $out"
+
+# ------------------------------------------------------------------ GitHub social preview 1280x640
+# (Upload it in the repo's Settings > General > Social preview. GitHub has no command line for this.)
+$logo = [System.Drawing.Image]::FromFile((Join-Path $root 'store\play-store-icon-512.png'))
+$canvas = New-Canvas 1280 640
+$bmp = $canvas[0]; $g = $canvas[1]
+$g.DrawImage($logo, 84, 100, 190, 190)
+$big = New-Object System.Drawing.Font('Segoe UI Black', 112, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Pixel)
+$mid = New-Object System.Drawing.Font('Segoe UI', 40, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Pixel)
+$small = New-Object System.Drawing.Font('Segoe UI', 30, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Pixel)
+$g.DrawString('BUNKER', $big, (New-Object System.Drawing.SolidBrush($text)), 76, 290)
+$g.DrawString('RUST SERVER ADMIN  ·  ANDROID'.Replace('·', [string][char]0x00B7), $mid, (New-Object System.Drawing.SolidBrush($accent)), 84, 424)
+$g.DrawString("Console  $dot  Players  $dot  Chat  $dot  Moderation", $small, (New-Object System.Drawing.SolidBrush($muted)), 84, 494)
+$shot = Get-ChildItem $rawDir -Filter '01-*.png' -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($shot) {
+  $img = [System.Drawing.Image]::FromFile($shot.FullName)
+  [void](Draw-Phone $g $img 820 96 960)
+  $img.Dispose()
+}
+$out = Join-Path $root 'store\social-preview.png'
+$bmp.Save($out, [System.Drawing.Imaging.ImageFormat]::Png)
+$g.Dispose(); $bmp.Dispose(); $logo.Dispose()
+"wrote $out"
