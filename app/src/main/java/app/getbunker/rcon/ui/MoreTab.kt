@@ -16,10 +16,11 @@ import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ShowChart
+import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.TouchApp
@@ -41,8 +42,9 @@ fun MoreTab(nav: NavController) {
         SectionHeader("Server")
         Entry(Icons.Filled.Speed, "Quick actions", "Save the world, set the time, restart with a countdown") { nav.navigate(Routes.QUICK) }
         Entry(Icons.Filled.Campaign, "Announce", "Send a message to everyone, with saved messages") { nav.navigate(Routes.ANNOUNCE) }
-        Entry(Icons.Filled.ShowChart, "Server health", "Charts of players, FPS, entities and memory") { nav.navigate(Routes.HEALTH) }
+        Entry(Icons.AutoMirrored.Filled.ShowChart, "Server health", "Charts of players, FPS, entities and memory") { nav.navigate(Routes.HEALTH) }
         Entry(Icons.Filled.Schedule, "Scheduler", "Run commands on a timer or at a time of day") { nav.navigate(Routes.SCHEDULES) }
+        Entry(Icons.Filled.Extension, "Plugins", "Carbon and Oxide plugins: sort, reload, load and unload") { nav.navigate(Routes.PLUGINS) }
         Entry(Icons.Filled.TouchApp, "Shortcuts", "Your own buttons for any console command") { nav.navigate(Routes.SHORTCUTS) }
 
         SectionHeader("Players")

@@ -26,6 +26,8 @@ object Routes {
     const val GIVE = "give"
     const val HEALTH = "health"
     const val HIDDEN = "hidden"
+    const val PLUGINS = "plugins"
+    const val OVERVIEW = "overview"
     const val SETTINGS = "settings"
     const val ABOUT = "about"
 
@@ -57,6 +59,8 @@ fun BunkerNav() {
         composable(Routes.GIVE) { SessionGate(nav) { s -> GiveItemsScreen(s, nav) } }
         composable(Routes.HEALTH) { SessionGate(nav) { s -> HealthScreen(s, nav) } }
         composable(Routes.HIDDEN) { SessionGate(nav) { s -> HiddenRulesScreen(s, nav) } }
+        composable(Routes.PLUGINS) { SessionGate(nav) { s -> PluginsScreen(s, nav) } }
+        composable(Routes.OVERVIEW) { OverviewScreen(nav) }
         composable(Routes.SETTINGS) { SettingsScreen(nav) }
         composable(Routes.ABOUT) { AboutScreen(nav) }
     }

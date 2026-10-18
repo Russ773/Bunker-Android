@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Visibility
@@ -90,7 +91,10 @@ fun ServersScreen(nav: NavController) {
                         Text("BUNKER", fontWeight = FontWeight.Black, letterSpacing = androidx.compose.ui.unit.TextUnit(2f, androidx.compose.ui.unit.TextUnitType.Sp))
                     }
                 },
-                actions = { IconButton(onClick = { nav.navigate(Routes.SETTINGS) }) { Icon(Icons.Filled.Settings, contentDescription = "Settings") } },
+                actions = {
+                    if (settings.servers.size >= 2) IconButton(onClick = { nav.navigate(Routes.OVERVIEW) }) { Icon(Icons.Filled.GridView, contentDescription = "Overview of all servers") }
+                    IconButton(onClick = { nav.navigate(Routes.SETTINGS) }) { Icon(Icons.Filled.Settings, contentDescription = "Settings") }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = B.c.bg),
             )
         },

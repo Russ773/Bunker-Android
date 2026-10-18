@@ -48,8 +48,7 @@
 > Needs WebRCON turned on for your server (+rcon.web 1). Bunker is an independent community tool and is not affiliated with or
 > endorsed by Facepunch Studios. Rust is a trademark of Facepunch Studios.
 
-**Assets already in the repo:** `store/play-store-icon-512.png` (the desktop logo, 512x512). Still needed: a 1024x500 feature
-graphic and 4+ phone screenshots (take them on the emulator against `tools/mock-rcon-server.js`).
+**Assets already in the repo (`store/`):** `play-store-icon-512.png` (the icon), `play/feature-graphic.png` (1024x500) and `play/screenshot-*.png` (seven 1080x1920 phone screenshots with captions, taken from the emulator against the mock server). Re-make them with `powershell -File toolsmake-store-assets.ps1` after replacing the raw shots in `store/raw/`. Retake the raw shots if the UI changes. The server names and addresses in them are made up.
 
 ## 4. Before the first upload
 

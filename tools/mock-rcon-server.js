@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // A pretend Rust WebRCON server for testing Bunker without a real game server. No dependencies.
 //
-//   node tools/mock-rcon-server.js [--port 28016] [--password test] [--noplugin] [--fast]
+//   node tools/mock-rcon-server.js [--port 28016] [--password test] [--name "My Server"] [--noplugin] [--fast]
 //
 // From the Android emulator the host PC is 10.0.2.2, so add a server with address 10.0.2.2, port 28016, password "test".
 // It answers serverinfo / playerlist / banlistex and common admin commands, sends console noise and chat,
@@ -16,6 +16,9 @@ const PORT = parseInt(arg('port', '28016'), 10);
 const PASSWORD = arg('password', 'test');
 const NO_PLUGIN = flag('noplugin');
 const FAST = flag('fast');
+const NAME = arg('name', 'Bunker Test Server [PVE x2]');
+const fs = require('fs');
+const path = require('path');
 
 const started = Date.now();
 const names = ['Scrapper', 'Nomad_77', 'LootGoblin', 'xX_Raider_Xx', 'Wolfie', 'BaseBuilder', 'Sulfur Sam', 'OilRigOllie', 'Medic', 'Zed', 'Pixel', 'Hatchet Harry'];
@@ -37,7 +40,7 @@ for (let i = 0; i < 6; i++) { const p = addPlayer(); p.joined -= rand(7200) * 10
 
 function serverInfo() {
   return JSON.stringify({
-    Hostname: 'Bunker Test Server [PVE x2]', MaxPlayers: maxPlayers, Players: players.length, Queued: 0, Joining: rand(3) === 0 ? 1 : 0,
+    Hostname: NAME, MaxPlayers: maxPlayers, Players: players.length, Queued: 0, Joining: rand(3) === 0 ? 1 : 0,
     EntityCount: 180000 + rand(2000), GameTime: `${String(timeHour).padStart(2, '0')}:00:00`, Uptime: Math.floor((Date.now() - started) / 1000) + 86400 * 2 + 5000,
     Map: 'Procedural Map', Framerate: Math.round((30 + Math.random() * 28) * 10) / 10, Memory: 6200 + rand(300), MemoryUsageSystem: 8400, Collections: 12, NetworkIn: 100, NetworkOut: 200, Restarting: false, SaveCreatedTime: new Date().toISOString(),
   });
@@ -82,6 +85,11 @@ function run(line) {
     case 'restart': log(`Restarting in ${a[0]} seconds`, 'Warning'); return `Restarting in ${a[0]}s`;
     case 'moderatorid': case 'ownerid': return `Added ${cmd}: ${a[0]}`;
     case 'removemoderator': case 'removeowner': return `Removed: ${a[0]}`;
+    case 'c.plugins': try { return fs.readFileSync(path.join(__dirname, 'sample-carbon-plugins.txt'), 'utf8'); } catch (e) { return 'Unknown command: c.plugins'; }
+    case 'oxide.plugins': return 'Unknown command: oxide.plugins';
+    case 'c.reload': log(`[Carbon] Reloading plugin ${a[0]}`); return `Reloaded plugin '${a[0]}'`;
+    case 'c.load': return `Loaded plugin '${a[0]}'`;
+    case 'c.unload': return `Unloaded plugin '${a[0]}'`;
     case 'status': return `hostname: Bunker Test Server\nversion : 2500 secure\nmap     : Procedural Map\nplayers : ${players.length} (${maxPlayers} max)`;
     case 'echo': return a.join(' ');
     default: return `Unknown command: ${cmd}`;

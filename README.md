@@ -15,7 +15,8 @@ console filters) with the [Windows app](https://github.com/Russ773/Bunker-Window
 | **Console** | Live, colour-coded output with command history, search, Chat/Warning/Error filters, hide a whole plugin or any words, tap a line for actions, share the log. A Command/Chat switch, and "say this in chat?" when you type a sentence instead of a command. |
 | **Players** | Search, sort (name, ping, time, health), pull to refresh. Tap anyone for: copy name or Steam ID, Steam profile, **kick, ban, mute, unmute, teleport to/from another player, give item (searchable, with pictures), private note, admin permissions** (moderator/owner). |
 | **Chat** | Player chat with game name colours, `[TEAM]` and plugin tags such as `[VIP]`, watch-word highlighting, and a box to talk back as yourself (BunkerChat plugin) or as SERVER. |
-| **More** | Quick actions (save world, time of day, restart countdown), Announce (saved messages), Server health charts (5 min to 2 h), Scheduler (intervals or daily, `wait N` steps), Shortcuts, Player database (notes, CSV export, join/leave feed), Ban list (unban, ban by Steam ID), Give items (to a player or everyone). |
+| **Multi Server** | An overview of every saved server at once (open from the server list): online or offline and why, players, FPS, uptime, a player sparkline and who is on. Tap one to open it, or send a message or command to all online servers (you confirm first). The extra connections only exist while that page is open. |
+| **More** | Quick actions (save world, time of day, restart countdown), Announce (saved messages), Plugins (Carbon and Oxide lists as sortable cards, with reload, load and unload, and failed plugins listed), Server health charts (5 min to 2 h), Scheduler (intervals or daily, `wait N` steps), Shortcuts, Player database (notes, CSV export, join/leave feed), Ban list (unban, ban by Steam ID), Give items (to a player or everyone). |
 | **Phone extras** | Stays connected with the screen off (quiet foreground notification), auto-reconnect, alerts for lost connection / chat watch-words / joins while the app is in the background, polling slows down in the background, app lock (fingerprint/face/screen lock), hide from recents & block screenshots, dark/light/system theme, console text size, keep screen on. |
 
 ## Build and run
@@ -48,8 +49,8 @@ port `28016`, password `test`. A wrong password gets the socket closed immediate
 
 ```
 app/src/main/java/app/getbunker/rcon/
-├── rcon/   RconClient (OkHttp WebSocket + request/reply), Parsers (server info, players, chat, bans, filters, command guess)
-├── core/   ServerSession (connect, reconnect, polling, scheduler, chat), PlayerTracker, ConsoleLog, ItemCatalog,
+├── rcon/   RconClient (OkHttp WebSocket + request/reply), Parsers (server info, players, chat, bans, filters, command guess), PluginList (Carbon/Oxide)
+├── core/   ServerSession (connect, reconnect, polling, scheduler, chat), ServerWatcher (Multi Server), PlayerTracker, ConsoleLog, ItemCatalog,
 │           Notifier, ConnectionService (foreground service), AppContainer/SessionManager
 ├── data/   Models, SettingsStore (JSON in app storage), SecretBox (Keystore AES-GCM)
 └── ui/     Compose screens: servers, session tabs, player actions, tools, lists, settings, theme
@@ -63,10 +64,9 @@ app/src/main/java/app/getbunker/rcon/
 
 ## Known gaps / ideas
 
-* No Multi Server overview yet (the desktop app has one) and no community widgets.
+* No community widgets yet.
 * Offline players can be banned/noted but not kicked, muted or teleported (same as desktop).
 * Temporary bans are not offered (the desktop app does not send them either).
-* Not yet tested against a live Rust server: the protocol code follows the desktop app and the mock server. Please try it on
-  yours, and check `Carbon`/`Oxide` plugin-list tables (not ported yet).
+* Not yet tested against a live Rust server: the protocol code follows the desktop app and the mock server, and the Carbon plugin parser is checked against a real `c.plugins` reply copied from the Windows app's tests (the Oxide format is the documented one). Please try it on yours.
 
 See [PLAY_STORE.md](PLAY_STORE.md) for the release checklist.
