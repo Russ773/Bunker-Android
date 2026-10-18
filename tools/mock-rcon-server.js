@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // A pretend Rust WebRCON server for testing Bunker without a real game server. No dependencies.
 //
-//   node tools/mock-rcon-server.js [--port 28016] [--password test] [--name "My Server"] [--players 6] [--joining 1] [--noplugin] [--fast]
+//   node tools/mock-rcon-server.js [--port 28016] [--password test] [--name "My Server"] [--players 6] [--joining 1] [--static] [--noplugin] [--fast]
 //
 // From the Android emulator the host PC is 10.0.2.2, so add a server with address 10.0.2.2, port 28016, password "test".
 // It answers serverinfo / playerlist / banlistex and common admin commands, sends console noise and chat,
@@ -16,6 +16,7 @@ const PORT = parseInt(arg('port', '28016'), 10);
 const PASSWORD = arg('password', 'test');
 const NO_PLUGIN = flag('noplugin');
 const FAST = flag('fast');
+const STATIC = flag('static');   // nobody joins or leaves, and only the players at the top of an A-Z list chat (tidy screenshots)
 const START_PLAYERS = parseInt(arg('players', '6'), 10);   // how many players are online at the start
 const JOINING = parseInt(arg('joining', '-1'), 10);       // -1 = random, otherwise always this many joining
 const NAME = arg('name', 'Bunker Test Server [PVE x2]');
@@ -23,7 +24,7 @@ const fs = require('fs');
 const path = require('path');
 
 const started = Date.now();
-const names = ['Scrapper', 'Nomad_77', 'LootGoblin', 'xX_Raider_Xx', 'Wolfie', 'BaseBuilder', 'Sulfur Sam', 'OilRigOllie', 'Medic', 'Zed', 'Pixel', 'Hatchet Harry'];
+const names = ['Ironclad', 'RustLord', 'Scrapper', 'Nomad', 'LootGoblin', 'BaseBuilder', 'Hatchet Harry', 'Sulfur Sam', 'OilRigOllie', 'Medic', 'Zed', 'Pixel', 'Wolfie', 'xX_Raider_Xx', 'Cobalt', 'Mariner', 'Vex', 'Tundra', 'Ashen', 'Kestrel', 'Rook', 'Dune', 'Halcyon', 'Marauder', 'Thorn', 'Cinder', 'Banshee', 'Atlas', 'Grizzly', 'Nova', 'Onyx', 'Phantom', 'Quill', 'Riot', 'Saber', 'Talon', 'Umbra', 'Vandal', 'Warden', 'Yeti', 'Zephyr', 'Bramble', 'Corvus', 'Drift', 'Ember', 'Fable', 'Gale', 'Havoc', 'Jinx', 'Kodiak', 'Lynx', 'Mako', 'Nimbus', 'Orion', 'Piston', 'Quartz', 'Raven', 'Sprocket', 'Tinker', 'Anvil', 'Bishop', 'Cadence'];
 const colours = ['#5af', '#fa5', '#af5', '#f5a', '#a5f', '#5fa', '#ddd'];
 let nextSteam = 76561198000000100n;
 const players = [];
@@ -32,8 +33,14 @@ let maxPlayers = 100;
 let timeHour = 12;
 const clients = new Set();
 
+// A name nobody online is using. Rare fallback once the roster is used up.
+function freeName() {
+  const free = names.filter(n => !players.some(p => p.DisplayName === n));
+  if (free.length) return free[STATIC ? 0 : Math.floor(Math.random() * free.length)];
+  return names[rand(names.length)] + '_' + (10 + rand(90));
+}
 function addPlayer(name) {
-  const p = { SteamID: String(nextSteam++), DisplayName: name || names[Math.floor(Math.random() * names.length)] + (Math.random() < 0.5 ? '' : Math.floor(Math.random() * 99)), Ping: 20 + Math.floor(Math.random() * 120), Address: `82.${rand(255)}.${rand(255)}.${rand(255)}:${40000 + rand(20000)}`, ConnectedSeconds: 0, Health: 40 + Math.random() * 60, joined: Date.now(), colour: colours[rand(colours.length)] };
+  const p = { SteamID: String(nextSteam++), DisplayName: name || freeName(), Ping: 20 + Math.floor(Math.random() * 120), Address: `82.${rand(255)}.${rand(255)}.${rand(255)}:${40000 + rand(20000)}`, ConnectedSeconds: 0, Health: 40 + Math.random() * 60, joined: Date.now(), colour: colours[rand(colours.length)] };
   players.push(p);
   return p;
 }
@@ -151,25 +158,28 @@ server.on('upgrade', (req, socket) => {
 
 // ----------------------------------------------------------------------------------------------- pretend life
 const noise = [
-  ['Generic', '[Economics] Saving balances for 214 players'],
-  ['Generic', '[Economics] Saving balances for 214 players'],
-  ['Generic', '[Steam Groups] Refreshing group membership'],
+  ['Generic', '[Player Stats] Saving stats for 214 players'],
+  ['Generic', '[Player Stats] Saving stats for 214 players'],
+  ['Generic', '[Kit Shop] Refreshing shop prices'],
   ['Generic', 'Saving 183204 ents took 0.42 seconds'],
-  ['Generic', '[ServerRewards] Daily reward claimed by a player'],
-  ['Warning', '[Raidable Bases] Failed to find a spawn point, retrying'],
+  ['Generic', '[Loot Booster] Daily bonus claimed by a player'],
+  ['Warning', '[Raid Alerts] Could not place a marker, retrying'],
   ['Warning', 'Calling ent.ServerInit took 13ms'],
-  ['Error', '[Kits] Failed to run hook OnPlayerRespawned: NullReferenceException: Object reference not set'],
+  ['Error', '[Quick Kits] Failed to run hook OnPlayerRespawned: NullReferenceException: Object reference not set'],
   ['Generic', 'Network: client count changed'],
 ];
 const every = (ms, fn) => setInterval(fn, FAST ? Math.max(500, ms / 5) : ms);
 every(2500, () => { const [t, m] = noise[rand(noise.length)]; log(m, t); });
 every(9000, () => {
+  if (STATIC) return;
   if (players.length < maxPlayers && (Math.random() < 0.55 || players.length < 3)) { const p = addPlayer(); log(`${p.Address}/${p.SteamID}/${p.DisplayName} joined [windows/${p.SteamID}]`); }
   else if (players.length > 2) { const p = players.splice(rand(players.length), 1)[0]; log(`${p.Address}/${p.SteamID}/${p.DisplayName} disconnecting: disconnect`); }
 });
-const lines = ['anyone want to trade?', 'who is raiding me', 'GG', 'free guns at outpost', 'how do I craft a tea?', 'lol', 'server is lagging a bit', 'any admins on?', 'nice base'];
+const lines = ['anyone want to trade?', 'who is raiding me', 'GG', 'free guns at outpost', 'how do I craft a tea?', 'lol', 'server is lagging a bit', 'any admins on?', 'nice base', 'need scrap, paying in wood', 'anyone near launch site?', 'team up for oil rig?', 'base at G12, come say hi', 'ok that was close', 'thanks for the help earlier', 'heli incoming!', 'selling ak, 400 scrap', 'who has a spare furnace?'];
 every(7000, () => {
-  if (!players.length) return; const p = players[rand(players.length)];
+  if (!players.length) return;
+  const pool = STATIC ? [...players].sort((a, b) => a.DisplayName.toLowerCase().localeCompare(b.DisplayName.toLowerCase())).slice(0, 9) : players;
+  const p = pool[rand(pool.length)];
   const team = Math.random() < 0.15; const tag = Math.random() < 0.2 ? '[VIP] ' : '';
   chat(p.DisplayName, p.SteamID, tag ? `${tag}${p.DisplayName}: ${lines[rand(lines.length)]}` : lines[rand(lines.length)], p.colour, team ? 1 : 0);
 });
