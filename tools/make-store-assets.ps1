@@ -42,6 +42,21 @@ function New-RoundedPath([float]$x, [float]$y, [float]$w, [float]$h, [float]$r) 
   return $p
 }
 
+# Fonts have empty space before the first letter, and it differs per font and size. This draws the text so the
+# first visible pixel of the first letter lands exactly on $inkX, so lines in different fonts line up.
+function Draw-InkString($g, [string]$text, $font, $brush, [float]$inkX, [float]$y) {
+  $size = $g.MeasureString($text, $font)
+  $w = [int]($size.Width + 60); $h = [int]($size.Height + 20)
+  $probe = New-Object System.Drawing.Bitmap($w, $h)
+  $pg = [System.Drawing.Graphics]::FromImage($probe)
+  $pg.Clear([System.Drawing.Color]::Black); $pg.TextRenderingHint = 'AntiAliasGridFit'
+  $pg.DrawString($text, $font, [System.Drawing.Brushes]::White, 30, 5)
+  $left = 30
+  :scan for ($x = 0; $x -lt $w; $x++) { for ($yy = 0; $yy -lt $h; $yy++) { if ($probe.GetPixel($x, $yy).R -gt 90) { $left = $x; break scan } } }
+  $pg.Dispose(); $probe.Dispose()
+  $g.DrawString($text, $font, $brush, $inkX - ($left - 30), $y)
+}
+
 function New-Canvas([int]$w, [int]$h) {
   $bmp = New-Object System.Drawing.Bitmap($w, $h)
   $g = [System.Drawing.Graphics]::FromImage($bmp)
@@ -97,15 +112,15 @@ if (Test-Path $rawDir) {
 $logo = [System.Drawing.Image]::FromFile((Join-Path $root 'store\play-store-icon-512.png'))
 $canvas = New-Canvas 1024 500
 $bmp = $canvas[0]; $g = $canvas[1]
-$g.DrawImage($logo, 56, 70, 150, 150)
+$g.DrawImage($logo, (64 - 150 * 82 / 512), 70, 150, 150)   # the hexagon starts 82/512 into the icon
 $big = New-Object System.Drawing.Font('Segoe UI Black', 84, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Pixel)
 $mid = New-Object System.Drawing.Font('Segoe UI', 30, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Pixel)
 $small = New-Object System.Drawing.Font('Segoe UI', 24, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Pixel)
-$g.DrawString('BUNKER', $big, (New-Object System.Drawing.SolidBrush($text)), 52, 228)
-$g.DrawString('RUST SERVER ADMIN', $mid, (New-Object System.Drawing.SolidBrush($accent)), 58, 326)
+Draw-InkString $g 'BUNKER' $big (New-Object System.Drawing.SolidBrush($text)) 64 228
+Draw-InkString $g 'RUST SERVER ADMIN' $mid (New-Object System.Drawing.SolidBrush($accent)) 64 326
 $dot = [string][char]0x00B7
 $tagline = "Console  $dot  Players  $dot  Chat  $dot  Moderation"
-$g.DrawString($tagline, $small, (New-Object System.Drawing.SolidBrush($muted)), 58, 384)
+Draw-InkString $g $tagline $small (New-Object System.Drawing.SolidBrush($muted)) 64 384
 
 $shot = Get-ChildItem $rawDir -Filter '01-*.png' -ErrorAction SilentlyContinue | Select-Object -First 1
 if ($shot) {
@@ -124,13 +139,13 @@ $g.Dispose(); $bmp.Dispose(); $logo.Dispose()
 $logo = [System.Drawing.Image]::FromFile((Join-Path $root 'store\play-store-icon-512.png'))
 $canvas = New-Canvas 1280 640
 $bmp = $canvas[0]; $g = $canvas[1]
-$g.DrawImage($logo, 84, 100, 190, 190)
+$g.DrawImage($logo, (88 - 190 * 82 / 512), 100, 190, 190)
 $big = New-Object System.Drawing.Font('Segoe UI Black', 112, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Pixel)
 $mid = New-Object System.Drawing.Font('Segoe UI', 40, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Pixel)
 $small = New-Object System.Drawing.Font('Segoe UI', 30, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Pixel)
-$g.DrawString('BUNKER', $big, (New-Object System.Drawing.SolidBrush($text)), 76, 290)
-$g.DrawString('RUST SERVER ADMIN  ·  ANDROID'.Replace('·', [string][char]0x00B7), $mid, (New-Object System.Drawing.SolidBrush($accent)), 84, 424)
-$g.DrawString("Console  $dot  Players  $dot  Chat  $dot  Moderation", $small, (New-Object System.Drawing.SolidBrush($muted)), 84, 494)
+Draw-InkString $g 'BUNKER' $big (New-Object System.Drawing.SolidBrush($text)) 88 290
+Draw-InkString $g ("RUST SERVER ADMIN  $dot  ANDROID") $mid (New-Object System.Drawing.SolidBrush($accent)) 88 424
+Draw-InkString $g "Console  $dot  Players  $dot  Chat  $dot  Moderation" $small (New-Object System.Drawing.SolidBrush($muted)) 88 494
 $shot = Get-ChildItem $rawDir -Filter '01-*.png' -ErrorAction SilentlyContinue | Select-Object -First 1
 if ($shot) {
   $img = [System.Drawing.Image]::FromFile($shot.FullName)
