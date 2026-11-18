@@ -27,10 +27,20 @@ class Notifier(private val context: Context, private val app: AppContainer) {
         )
         manager.createNotificationChannel(
             NotificationChannel(CH_ALERTS, context.getString(R.string.channel_alerts), NotificationManager.IMPORTANCE_DEFAULT).apply {
-                description = "Lost connections, chat watch-words and player joins."
+                description = "Lost connections, chat watch-words, server restarts, low FPS and sudden drops in players."
+            }
+        )
+        manager.createNotificationChannel(
+            NotificationChannel(CH_WATCH, context.getString(R.string.channel_watchlist), NotificationManager.IMPORTANCE_HIGH).apply {
+                description = "When someone on your watch list joins a server."
             }
         )
     }
+
+    private fun servicePending(action: String, requestCode: Int): PendingIntent = PendingIntent.getService(
+        context, requestCode, Intent(context, ConnectionService::class.java).setAction(action),
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+    )
 
     private fun canPost(): Boolean =
         Build.VERSION.SDK_INT < 33 || ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
@@ -52,6 +62,8 @@ class Notifier(private val context: Context, private val app: AppContainer) {
             .setSilent(true)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setContentIntent(openApp())
+            .addAction(0, "Save world", servicePending(ConnectionService.ACTION_SAVE, 11))
+            .addAction(0, "Disconnect", servicePending(ConnectionService.ACTION_STOP, 12))
             .build()
 
     fun updateConnection(title: String, text: String) {
@@ -69,11 +81,16 @@ class Notifier(private val context: Context, private val app: AppContainer) {
             SessionEvent.Reconnected -> manager.cancel(ID_LOST)
             is SessionEvent.ChatWatch -> if (s.notifyWatchWords) alert(ID_CHAT, "${event.name} on $server", event.message)
             is SessionEvent.PlayerJoined -> if (s.notifyJoins) alert(ID_JOIN, "$server", "${event.name} joined")
+            // The session only sends these when the matching alert is switched on in Settings.
+            is SessionEvent.Restarted -> AlertText.of(server, event)?.let { alert(ID_RESTART, it.first, it.second) }
+            is SessionEvent.LowFps -> AlertText.of(server, event)?.let { alert(ID_FPS, it.first, it.second) }
+            is SessionEvent.PlayerDrop -> AlertText.of(server, event)?.let { alert(ID_DROP, it.first, it.second) }
+            is SessionEvent.WatchedJoined -> AlertText.of(server, event)?.let { alert(ID_WATCH + (event.steamId.takeLast(3).toIntOrNull() ?: 0), it.first, it.second, CH_WATCH) }
         }
     }
 
-    private fun alert(id: Int, title: String, text: String) {
-        val n = NotificationCompat.Builder(context, CH_ALERTS)
+    private fun alert(id: Int, title: String, text: String, channel: String = CH_ALERTS) {
+        val n = NotificationCompat.Builder(context, channel)
             .setSmallIcon(R.drawable.ic_stat_bunker)
             .setContentTitle(title)
             .setContentText(text)
@@ -87,9 +104,14 @@ class Notifier(private val context: Context, private val app: AppContainer) {
     companion object {
         const val CH_CONNECTION = "connection"
         const val CH_ALERTS = "alerts"
+        const val CH_WATCH = "watchlist"
         const val ID_CONNECTION = 1
         const val ID_LOST = 2
         const val ID_CHAT = 3
         const val ID_JOIN = 4
+        const val ID_RESTART = 5
+        const val ID_FPS = 6
+        const val ID_DROP = 7
+        const val ID_WATCH = 1000 // plus the last three digits of the Steam ID, so two watched players do not replace each other
     }
 }

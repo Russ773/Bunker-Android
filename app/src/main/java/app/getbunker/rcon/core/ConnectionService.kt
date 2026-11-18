@@ -35,6 +35,11 @@ class ConnectionService : Service() {
             stopSelf()
             return START_NOT_STICKY
         }
+        if (intent?.action == ACTION_SAVE) {
+            // The "Save world" button on the ongoing notification. The service is already running, so there is nothing else to set up.
+            app.sessions.session.value?.command("server.save")
+            return START_NOT_STICKY
+        }
 
         ServiceCompat.startForeground(
             this, Notifier.ID_CONNECTION,
@@ -68,6 +73,7 @@ class ConnectionService : Service() {
 
     companion object {
         const val ACTION_STOP = "app.getbunker.rcon.STOP"
+        const val ACTION_SAVE = "app.getbunker.rcon.SAVE"
 
         fun start(context: Context) {
             try { context.startForegroundService(Intent(context, ConnectionService::class.java)) } catch (_: Exception) { /* not allowed to start from here */ }

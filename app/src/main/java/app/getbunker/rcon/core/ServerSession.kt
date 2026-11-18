@@ -35,6 +35,15 @@ sealed interface SessionEvent {
     data object Reconnected : SessionEvent
     data class ChatWatch(val name: String, val message: String) : SessionEvent
     data class PlayerJoined(val name: String) : SessionEvent
+
+    /** The server's uptime went backwards: it was restarted (or crashed and came back). */
+    data class Restarted(val previousUptimeSeconds: Long) : SessionEvent
+    /** Server FPS has stayed below the limit you set for [minutes] minutes. */
+    data class LowFps(val fps: Int, val minutes: Int) : SessionEvent
+    /** Many players left at once: from [from] a moment ago to [to] now. */
+    data class PlayerDrop(val from: Int, val to: Int) : SessionEvent
+    /** Someone on your watch list joined. [note] is your private note about them, if any. */
+    data class WatchedJoined(val name: String, val steamId: String, val note: String) : SessionEvent
 }
 
 /** How long to wait between attempts to reconnect after the connection to the server drops. */
@@ -90,6 +99,7 @@ class ServerSession(val profile: ServerProfile, private val app: AppContainer) {
     private var userStopped = false
     private var connectedAtMillis = System.currentTimeMillis()
     private var chatPluginMissing = false
+    private val alerts = AlertEngine()
     private val refreshLock = Mutex()
     private val connectLock = Mutex()
 
@@ -98,7 +108,16 @@ class ServerSession(val profile: ServerProfile, private val app: AppContainer) {
     init {
         rcon.onMessage = { m -> onMessage(m) }
         rcon.onClosed = { reason -> scope.launch { onClosed(reason) } }
-        scope.launch { tracker.activity.collect { if (it.joined) _events.tryEmit(SessionEvent.PlayerJoined(it.name)) } }
+        scope.launch {
+            tracker.activity.collect { e ->
+                if (!e.joined) return@collect
+                _events.tryEmit(SessionEvent.PlayerJoined(e.name))
+                val s = settings.current
+                if (s.alertWatchList && s.watchList.any { it.steamId == e.steamId }) {
+                    _events.tryEmit(SessionEvent.WatchedJoined(e.name, e.steamId, tracker.noteFor(e.steamId)))
+                }
+            }
+        }
     }
 
     // ------------------------------------------------------------------ connection
@@ -242,6 +261,9 @@ class ServerSession(val profile: ServerProfile, private val app: AppContainer) {
             if (info != null) {
                 _info.value = info
                 _history.value = (_history.value + HealthSample(System.currentTimeMillis(), info.players, info.fps, info.entities, info.memoryMb, info.uptimeSeconds)).takeLast(MAX_SAMPLES)
+                val s = settings.current
+                alerts.onReading(System.currentTimeMillis(), info, AlertConfig(s.alertRestart, s.alertLowFps, s.alertFpsBelow, playerDrop = s.alertPlayerDrop))
+                    .forEach { _events.tryEmit(it) }
             }
             if (players != null) {
                 _players.value = players

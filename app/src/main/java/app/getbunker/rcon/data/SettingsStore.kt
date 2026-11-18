@@ -95,6 +95,25 @@ class SettingsStore(context: Context) {
     fun confirmCommandWord(word: String) = update { s ->
         if (word in s.confirmedCommands) s else s.copy(confirmedCommands = (s.confirmedCommands + word).takeLast(200))
     }
+
+    // ---- Steam key (encrypted like the RCON passwords)
+
+    fun steamApiKey(): String = SecretBox.decrypt(current.steamApiKeyEnc)
+
+    fun setSteamApiKey(key: String) = update { it.copy(steamApiKeyEnc = SecretBox.encrypt(key.trim())) }
+
+    // ---- watch list
+
+    fun isWatched(steamId: String): Boolean = current.watchList.any { it.steamId == steamId }
+
+    /** Adds a player to the watch list (or refreshes their name if they are already on it). */
+    fun watch(steamId: String, name: String) = update { s ->
+        val existing = s.watchList.firstOrNull { it.steamId == steamId }
+        if (existing != null) s.copy(watchList = s.watchList.map { if (it.steamId == steamId && name.isNotBlank()) it.copy(name = name) else it })
+        else s.copy(watchList = s.watchList + WatchEntry(steamId, name, System.currentTimeMillis()))
+    }
+
+    fun unwatch(steamId: String) = update { s -> s.copy(watchList = s.watchList.filterNot { it.steamId == steamId }) }
 }
 
 /** Cleaning for hide rules, kept here so the settings store does not depend on the rcon package. */

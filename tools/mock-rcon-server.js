@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // A pretend Rust WebRCON server for testing Bunker without a real game server. No dependencies.
 //
-//   node tools/mock-rcon-server.js [--port 28016] [--password test] [--name "My Server"] [--players 6] [--joining 1] [--static] [--noplugin] [--fast]
+//   node tools/mock-rcon-server.js [--port 28016] [--password test] [--name "My Server"] [--players 6] [--joining 1] [--static]   (and test controls over RCON: mock.fps 12 | mock.drop | mock.restart | mock.leave NAME | mock.join NAME [steamid]) [--noplugin] [--fast]
 //
 // From the Android emulator the host PC is 10.0.2.2, so add a server with address 10.0.2.2, port 28016, password "test".
 // It answers serverinfo / playerlist / banlistex and common admin commands, sends console noise and chat,
@@ -23,12 +23,15 @@ const NAME = arg('name', 'Bunker Test Server [PVE x2]');
 const fs = require('fs');
 const path = require('path');
 
-const started = Date.now();
+let started = Date.now();
+let uptimeBase = 86400 * 2 + 5000;   // the server claims to have been up two days already, until mock.restart
+let forcedFps = null;                // set with: mock.fps 12   (clear with: mock.fps off)
+const gone = new Map();              // players who left with mock.leave, so mock.join brings back the same Steam ID
 const names = ['Ironclad', 'RustLord', 'Scrapper', 'Nomad', 'LootGoblin', 'BaseBuilder', 'Hatchet Harry', 'Sulfur Sam', 'OilRigOllie', 'Medic', 'Zed', 'Pixel', 'Wolfie', 'xX_Raider_Xx', 'Cobalt', 'Mariner', 'Vex', 'Tundra', 'Ashen', 'Kestrel', 'Rook', 'Dune', 'Halcyon', 'Marauder', 'Thorn', 'Cinder', 'Banshee', 'Atlas', 'Grizzly', 'Nova', 'Onyx', 'Phantom', 'Quill', 'Riot', 'Saber', 'Talon', 'Umbra', 'Vandal', 'Warden', 'Yeti', 'Zephyr', 'Bramble', 'Corvus', 'Drift', 'Ember', 'Fable', 'Gale', 'Havoc', 'Jinx', 'Kodiak', 'Lynx', 'Mako', 'Nimbus', 'Orion', 'Piston', 'Quartz', 'Raven', 'Sprocket', 'Tinker', 'Anvil', 'Bishop', 'Cadence'];
 const colours = ['#5af', '#fa5', '#af5', '#f5a', '#a5f', '#5fa', '#ddd'];
-let nextSteam = 76561198000000100n;
+let nextSteam = 76561202250000100n;   // far above any real Steam account, so a card lookup never shows a real person
 const players = [];
-const bans = [{ id: '76561198012345678', name: 'Griefer9000', reason: 'Griefing', expiry: -1 }, { id: '76561198087654321', name: 'SpeedyG', reason: 'Speed hack', expiry: Math.floor(Date.now() / 1000) + 86400 * 3 }];
+const bans = [{ id: '76561202250000901', name: 'Griefer9000', reason: 'Griefing', expiry: -1 }, { id: '76561202250000902', name: 'SpeedyG', reason: 'Speed hack', expiry: Math.floor(Date.now() / 1000) + 86400 * 3 }];
 let maxPlayers = 100;
 let timeHour = 12;
 const clients = new Set();
@@ -50,8 +53,8 @@ for (let i = 0; i < START_PLAYERS; i++) { const p = addPlayer(); p.joined -= ran
 function serverInfo() {
   return JSON.stringify({
     Hostname: NAME, MaxPlayers: maxPlayers, Players: players.length, Queued: 0, Joining: JOINING >= 0 ? JOINING : (rand(3) === 0 ? 1 : 0),
-    EntityCount: 180000 + rand(2000), GameTime: `${String(timeHour).padStart(2, '0')}:00:00`, Uptime: Math.floor((Date.now() - started) / 1000) + 86400 * 2 + 5000,
-    Map: 'Procedural Map', Framerate: Math.round((30 + Math.random() * 28) * 10) / 10, Memory: 6200 + rand(300), MemoryUsageSystem: 8400, Collections: 12, NetworkIn: 100, NetworkOut: 200, Restarting: false, SaveCreatedTime: new Date().toISOString(),
+    EntityCount: 180000 + rand(2000), GameTime: `${String(timeHour).padStart(2, '0')}:00:00`, Uptime: Math.floor((Date.now() - started) / 1000) + uptimeBase,
+    Map: 'Procedural Map', Framerate: forcedFps != null ? forcedFps : Math.round((30 + Math.random() * 28) * 10) / 10, Memory: 6200 + rand(300), MemoryUsageSystem: 8400, Collections: 12, NetworkIn: 100, NetworkOut: 200, Restarting: false, SaveCreatedTime: new Date().toISOString(),
   });
 }
 function playerList() {
@@ -99,6 +102,12 @@ function run(line) {
     case 'c.reload': log(`[Carbon] Reloading plugin ${a[0]}`); return `Reloaded plugin '${a[0]}'`;
     case 'c.load': return `Loaded plugin '${a[0]}'`;
     case 'c.unload': return `Unloaded plugin '${a[0]}'`;
+    // ---- test controls: make things happen on demand (not part of Rust)
+    case 'mock.fps': forcedFps = (a[0] === undefined || a[0] === 'off') ? null : parseFloat(a[0]); return 'fps: ' + (forcedFps === null ? 'random' : forcedFps);
+    case 'mock.drop': { const n = Math.floor(players.length * 0.6); for (let i = 0; i < n; i++) players.pop(); return 'dropped ' + n + ' players'; }
+    case 'mock.restart': started = Date.now(); uptimeBase = 0; log('Server shutting down for restart', 'Warning'); return 'restarted';
+    case 'mock.leave': { const p = players.find(x => x.DisplayName === a.join(' ')); if (!p) return 'no such player'; players.splice(players.indexOf(p), 1); gone.set(p.DisplayName, p); log(`${p.Address}/${p.SteamID}/${p.DisplayName} disconnecting: disconnect`); return 'left'; }
+    case 'mock.join': { const name = a[0] || 'Newcomer'; let p = gone.get(name); if (p) { gone.delete(name); players.push(p); } else { p = addPlayer(name); if (a[1]) p.SteamID = a[1]; } log(`${p.Address}/${p.SteamID}/${p.DisplayName} joined [windows/${p.SteamID}]`); return p.SteamID; }
     case 'status': return `hostname: Bunker Test Server\nversion : 2500 secure\nmap     : Procedural Map\nplayers : ${players.length} (${maxPlayers} max)`;
     case 'echo': return a.join(' ');
     default: return `Unknown command: ${cmd}`;

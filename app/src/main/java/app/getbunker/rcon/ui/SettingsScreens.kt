@@ -22,6 +22,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import app.getbunker.rcon.steam.SteamLookup
+import kotlin.math.roundToInt
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -119,6 +125,24 @@ fun SettingsScreen(nav: NavController) {
                 modifier = Modifier.padding(horizontal = 16.dp),
             ) { Text("Android notification settings") }
 
+            SectionHeader("Server alerts")
+            Text(
+                "Be told when something happens to the server itself. Each one shows as a notification while Bunker is in the background, and as a message while it is open.",
+                Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall, color = B.c.muted,
+            )
+            SettingSwitch("Server restarted", "When the server's uptime starts over, including a restart you missed while reconnecting", s.alertRestart) { v -> app.settings.update { it.copy(alertRestart = v) } }
+            SettingSwitch("Low server FPS", "When FPS stays under the limit below for two minutes", s.alertLowFps) { v -> app.settings.update { it.copy(alertLowFps = v) } }
+            if (s.alertLowFps) Column(Modifier.padding(horizontal = 16.dp)) {
+                Text("Alert when FPS is under ${s.alertFpsBelow}")
+                Slider(
+                    value = s.alertFpsBelow.toFloat(), onValueChange = { v -> app.settings.update { it.copy(alertFpsBelow = ((v / 5f).roundToInt() * 5).coerceIn(5, 40)) } },
+                    valueRange = 5f..40f, steps = 6, colors = SliderDefaults.colors(thumbColor = B.c.accent, activeTrackColor = B.c.accent),
+                )
+            }
+            SettingSwitch("Sudden drop in players", "When many players leave within a few minutes (a crash or heavy lag). A restart is reported on its own.", s.alertPlayerDrop) { v -> app.settings.update { it.copy(alertPlayerDrop = v) } }
+            SettingSwitch("Watch list", "When someone on your watch list joins a server, with your note about them", s.alertWatchList) { v -> app.settings.update { it.copy(alertWatchList = v) } }
+            OutlinedButton(onClick = { nav.navigate(Routes.WATCHLIST) }, modifier = Modifier.padding(horizontal = 16.dp)) { Text("Manage the watch list (${s.watchList.size})") }
+
             SectionHeader("Chat as yourself")
             Text(
                 "Set a name and Bunker sends your chat messages with that name, colour and Steam picture instead of SERVER. This needs the small Bunker Chat plugin on your Carbon or Oxide server; without it Bunker uses the plain say command with your name in the text.",
@@ -151,6 +175,22 @@ fun SettingsScreen(nav: NavController) {
 
             SectionHeader("Items")
             SettingSwitch("Keep the item list up to date", "Downloads Rust's item list and pictures from GitHub (bobosneefdev/rust-items-json), at most once a day", s.useOnlineItemList) { v -> app.settings.update { it.copy(useOnlineItemList = v) } }
+
+            SectionHeader("Steam lookups")
+            SettingSwitch("Look players up on Steam", "When you open a player's card. Only their Steam ID is sent, to steamcommunity.com.", s.steamLookups) { v -> app.settings.update { it.copy(steamLookups = v) } }
+            var keyText by remember { mutableStateOf(app.settings.steamApiKey()) }
+            OutlinedTextField(
+                keyText, { v ->
+                    keyText = v.trim().take(32)
+                    app.settings.setSteamApiKey(keyText)
+                    SteamLookup.clearCache()
+                },
+                label = { Text("Steam Web API key (optional)") }, singleLine = true, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                visualTransformation = PasswordVisualTransformation(),
+                isError = keyText.isNotEmpty() && !SteamLookup.looksLikeKey(keyText),
+                supportingText = { Text(if (keyText.isNotEmpty() && !SteamLookup.looksLikeKey(keyText)) "A Steam key is 32 letters and numbers." else "Adds hours in Rust, account age and the full ban record to the card. Stored encrypted on this phone and sent only to Steam.") },
+            )
+            TextButton(onClick = { openUrl(context, "https://steamcommunity.com/dev/apikey") }, modifier = Modifier.padding(horizontal = 8.dp)) { Text("Get a free Steam key", color = B.c.accent) }
 
             SectionHeader("Security")
             SettingSwitch("Lock Bunker", "Ask for your fingerprint, face or screen lock when opening the app", s.appLock) { v ->

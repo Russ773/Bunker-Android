@@ -64,7 +64,8 @@ Everything you do most, one thumb away. The Android app follows the Windows app 
 | --- | --- |
 | 📊 **Dashboard** | Players, server FPS, entities, memory, uptime and map at a glance, with live player and FPS charts, one-tap *Save*, *Announce* and *Tools*, your own shortcut buttons, who is online and the latest joins and leaves. |
 | 🖥️ **Console** | Live, colour-coded output with command history, search, Chat / Warning / Error filters, and **hiding a whole plugin** (say, everything tagged `[Economics]`) or any words you choose. Tap a line to copy it or hide its plugin, long-press to copy, share the log. A **Command / Chat** switch lets you talk from the same box and asks "say this in chat?" before it sends ordinary words as a command. |
-| 👥 **Players** | Everyone online with ping, time played and health. Search, sort, pull to refresh. Tap a player for **copy name or Steam ID, open their Steam profile, kick, ban, mute, unmute, teleport them to someone (or someone to them), give an item with a searchable list and pictures, a private note, and admin permissions**. |
+| 👥 **Players** | Everyone online with ping, time played and health. Search, sort, pull to refresh. Tap a player to open their **player card**, then **kick, ban, mute, unmute, teleport them to someone (or someone to them), give an item with a searchable list and pictures, add a private note, put them on your watch list, copy their name or Steam ID, open their Steam profile and set admin permissions**. |
+| 🪪 **Player card** | Their Steam picture and name, badges that matter (online, **banned**, private profile, limited account, your note, on your watch list), how they are doing on your server (ping, health, this visit, first and last seen, total time, visits) and what Steam says: account age, profile privacy and location. Add a free Steam key in Settings for **hours in Rust, the exact account age and the full ban record** (VAC, game and trade bans, and how long ago). Only the Steam ID is sent, only when a card is opened, and it can be switched off. |
 | 💬 **Chat** | Chat the way the game shows it: coloured player names, a green **[TEAM]** tag, plugin prefixes such as **[VIP]**, watch-words highlighted, and a box to talk back **as yourself** (your name, colour and Steam picture, through the small [BunkerChat plugin](app/src/main/assets/BunkerChat.cs)) or as SERVER. |
 | ⋯ **More** | Everything else below. |
 
@@ -86,7 +87,10 @@ Everything you do most, one thumb away. The Android app follows the Windows app 
 ### 📱 Made for a phone
 
 * 🔌 **Stays connected** with the screen off (a quiet notification keeps Android from closing it), and **auto-reconnects** if the connection drops: a restart, a wobble, a tunnel.
-* 🔔 **Alerts** when the connection is lost, when chat contains one of your watch-words, or (optionally) when someone joins. They only appear when Bunker is in the background.
+* 🔔 **Alerts** when the connection is lost, when chat contains one of your watch-words, or (optionally) when someone joins. They show as notifications while Bunker is in the background.
+* 🚨 **Server alerts**: told when the server **restarts** (even one you missed while reconnecting), when **FPS stays low** (you set the limit), or when **many players leave at once**. Each is optional.
+* 👁️ **Watch list**: pick players from their card (or add a Steam ID) and get a high-priority alert, with your note about them, the moment they join any of your servers.
+* ⏯️ **Buttons on the notification**: *Save world* and *Disconnect* without opening the app.
 * 🔋 **Gentle on the battery.** Polling slows down while the app is out of sight.
 * 🔐 **App lock** with your fingerprint, face or screen lock, and a switch to hide Bunker from recent apps and block screenshots.
 * 🎨 Dark and light themes (or follow the phone), adjustable console text size, keep-screen-on.
@@ -101,25 +105,25 @@ Everything you do most, one thumb away. The Android app follows the Windows app 
     <td width="25%"><img src="store/play/screenshot-01-dashboard.png" alt="Dashboard"></td>
     <td width="25%"><img src="store/play/screenshot-02-console.png" alt="Console"></td>
     <td width="25%"><img src="store/play/screenshot-03-players.png" alt="Players"></td>
-    <td width="25%"><img src="store/play/screenshot-04-actions.png" alt="Player actions"></td>
+    <td width="25%"><img src="store/play/screenshot-04-card.png" alt="Player card"></td>
   </tr>
   <tr>
     <td><sub><b>📊 Dashboard</b>: live numbers and charts</sub></td>
     <td><sub><b>🖥️ Console</b>: search, filters, history</sub></td>
     <td><sub><b>👥 Players</b>: ping, time, health</sub></td>
-    <td><sub><b>⚡ One tap to act</b>: kick, ban, give…</sub></td>
+    <td><sub><b>🪪 Player card</b>: Steam, bans, hours</sub></td>
   </tr>
   <tr>
     <td><img src="store/play/screenshot-05-chat.png" alt="Chat"></td>
     <td><img src="store/play/screenshot-06-overview.png" alt="Multi Server overview"></td>
     <td><img src="store/play/screenshot-07-plugins.png" alt="Plugins"></td>
-    <td></td>
+    <td><img src="store/play/screenshot-08-watchlist.png" alt="Watch list"></td>
   </tr>
   <tr>
     <td><sub><b>💬 Chat</b>: colours, [TEAM] and tags</sub></td>
     <td><sub><b>🌐 Multi Server</b>: every server at once</sub></td>
     <td><sub><b>🧩 Plugins</b>: Carbon and Oxide</sub></td>
-    <td></td>
+    <td><sub><b>👁️ Watch list</b>: told when they join</sub></td>
   </tr>
 </table>
 </div>
@@ -258,6 +262,8 @@ See [PLAY_STORE.md](PLAY_STORE.md): create an upload key, `./gradlew :app:bundle
 - [x] Carbon and Oxide plugin tables with reload, load and unload
 - [x] Multi Server overview with send-to-all
 - [x] App lock, dark and light themes
+- [x] Player card with Steam lookups (same as Windows 1.0.17)
+- [x] Server alerts (restart, low FPS, player drop), a watch list and notification buttons
 - [ ] Google Play release
 - [ ] Community widgets (as on Windows)
 - [ ] iOS version

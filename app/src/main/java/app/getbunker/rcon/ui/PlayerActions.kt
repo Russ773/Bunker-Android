@@ -25,6 +25,8 @@ import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PersonPinCircle
 import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -93,17 +95,8 @@ fun PlayerActionsHost(session: ServerSession, target: PlayerTarget?, onDismiss: 
     if (sheetOpen) {
         ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState, containerColor = B.c.panel) {
             Column(Modifier.navigationBarsPadding().verticalScroll(rememberScrollState())) {
-                Column(Modifier.padding(horizontal = 20.dp, vertical = 4.dp)) {
-                    Text(target.name.ifBlank { target.steamId }, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-                    val sub = buildString {
-                        append(target.steamId)
-                        append("  ·  ")
-                        append(if (target.online && target.ping != null) "${target.ping} ms" else if (target.online) "online" else "offline")
-                    }
-                    Text(sub, style = MaterialTheme.typography.bodySmall, color = B.c.muted)
-                    val note = app.sessions.session.collectAsState().value?.tracker?.records?.collectAsState()?.value?.get(target.steamId)?.note.orEmpty()
-                    if (note.isNotEmpty()) { Spacer(Modifier.size(6.dp)); Text("Note: $note", style = MaterialTheme.typography.bodySmall, color = B.c.warn) }
-                }
+                // The player card: who they are, how they are doing on your server, and what Steam says about them.
+                PlayerCard(session, target)
                 Spacer(Modifier.size(8.dp))
                 HorizontalDivider(color = B.c.border)
 
@@ -125,6 +118,12 @@ fun PlayerActionsHost(session: ServerSession, target: PlayerTarget?, onDismiss: 
                 HorizontalDivider(color = B.c.border)
 
                 ActionRow(Icons.Filled.EditNote, "Add or edit note...") { sheetOpen = false; dialog = PlayerDialog.Note }
+                val watchedNow = app.settings.state.collectAsState().value.watchList.any { it.steamId == target.steamId }
+                ActionRow(if (watchedNow) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, if (watchedNow) "Remove from watch list" else "Add to watch list", enabled = safeId) {
+                    if (watchedNow) { app.settings.unwatch(target.steamId); notify("${target.name.ifBlank { target.steamId }} removed from the watch list") }
+                    else { app.settings.watch(target.steamId, target.name); notify("Watching ${target.name.ifBlank { target.steamId }}: you will be told when they join") }
+                    onDismiss()
+                }
                 ActionRow(Icons.Filled.AdminPanelSettings, "Admin permissions...", enabled = connected && safeId) { sheetOpen = false; dialog = PlayerDialog.Permissions }
                 Spacer(Modifier.size(16.dp))
             }

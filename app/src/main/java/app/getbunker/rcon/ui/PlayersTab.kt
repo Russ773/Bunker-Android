@@ -59,6 +59,8 @@ fun PlayersTab(session: ServerSession, notify: (String) -> Unit) {
     val players by session.players.collectAsState()
     val state by session.state.collectAsState()
     val notes by session.tracker.records.collectAsState()
+    val watchList by LocalApp.current.settings.state.collectAsState()
+    val watchedIds = remember(watchList.watchList) { watchList.watchList.map { it.steamId }.toSet() }
     var query by rememberSaveable { mutableStateOf("") }
     var sort by rememberSaveable { mutableStateOf(PlayerSort.Name) }
     var sortMenu by remember { mutableStateOf(false) }
@@ -106,7 +108,7 @@ fun PlayersTab(session: ServerSession, notify: (String) -> Unit) {
             } else {
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
                     items(shown, key = { it.steamId.ifEmpty { it.name } }) { p ->
-                        PlayerRow(p, hasNote = notes[p.steamId]?.note?.isNotEmpty() == true) { target = PlayerTarget(p.steamId, p.name, p.ping, true) }
+                        PlayerRow(p, hasNote = notes[p.steamId]?.note?.isNotEmpty() == true, watched = watchedIds.contains(p.steamId)) { target = PlayerTarget(p.steamId, p.name, p.ping, true) }
                         HorizontalDivider(color = B.c.border, modifier = Modifier.padding(start = 72.dp))
                     }
                 }
@@ -118,13 +120,14 @@ fun PlayersTab(session: ServerSession, notify: (String) -> Unit) {
 }
 
 @Composable
-private fun PlayerRow(p: PlayerInfo, hasNote: Boolean, onClick: () -> Unit) {
+private fun PlayerRow(p: PlayerInfo, hasNote: Boolean, watched: Boolean, onClick: () -> Unit) {
     Row(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
         Avatar(p.name)
         Spacer(Modifier.size(14.dp))
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(p.name.ifBlank { "(no name)" }, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                if (watched) { Spacer(Modifier.size(8.dp)); Pill("watching", B.c.err) }
                 if (hasNote) { Spacer(Modifier.size(8.dp)); Pill("note", B.c.warn) }
             }
             Text("${p.steamId}  ·  ${Fmt.duration(p.connectedSeconds)} online", style = MaterialTheme.typography.bodySmall, color = B.c.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)

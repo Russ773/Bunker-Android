@@ -87,6 +87,20 @@ data class AppSettings(
     val watchWords: String = "",
     val notifyJoins: Boolean = false,
 
+    // Alerts about the server itself (each can show as a notification, or as a message when the app is open)
+    val alertRestart: Boolean = true,
+    val alertLowFps: Boolean = false,
+    val alertFpsBelow: Int = 20,
+    val alertPlayerDrop: Boolean = false,
+    val alertWatchList: Boolean = true,
+    /** Players to be told about when they join, whichever server you are on. */
+    val watchList: List<WatchEntry> = emptyList(),
+
+    // Steam lookups on the player card (see SteamLookup). Only a Steam ID goes out, and only when a card is opened.
+    val steamLookups: Boolean = true,
+    /** An optional free Steam Web API key, encrypted like the RCON passwords. Adds Rust hours, account age and the full ban record. */
+    val steamApiKeyEnc: String = "",
+
     // Chat identity (see the BunkerChat plugin)
     val chatName: String = "",
     val chatSteamId: String = "",
@@ -111,6 +125,10 @@ data class AppSettings(
     val activeServer: ServerProfile?
         get() = servers.firstOrNull { it.id == activeServerId } ?: servers.firstOrNull()
 }
+
+/** A player on the watch list. The name is only for showing; the Steam ID is what is matched. */
+@Serializable
+data class WatchEntry(val steamId: String, val name: String = "", val addedMillis: Long = 0)
 
 /** One player Bunker has seen on a server, with your own note about them. */
 @Serializable

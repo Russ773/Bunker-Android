@@ -57,6 +57,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
+import app.getbunker.rcon.core.AlertText
 import app.getbunker.rcon.core.ConnState
 import app.getbunker.rcon.core.ServerSession
 import kotlinx.coroutines.launch
@@ -78,6 +79,14 @@ fun SessionScreen(session: ServerSession, nav: NavController) {
     val scope = rememberCoroutineScope()
     var menu by remember { mutableStateOf(false) }
     val notify: (String) -> Unit = { msg -> scope.launch { snack.currentSnackbarData?.dismiss(); snack.showSnackbar(msg) } }
+
+    // Server alerts (a restart, low FPS, a drop in players, a watched player joining) show here while the app is open.
+    // When it is in the background the same events become notifications instead.
+    LaunchedEffect(session) {
+        session.events.collect { e ->
+            AlertText.of(session.profile.displayName, e)?.let { (title, text) -> notify("$title: ${text.lineSequence().first()}") }
+        }
+    }
 
     // Ask once for permission to show the notifications (needed on Android 13 and newer).
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }

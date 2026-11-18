@@ -25,10 +25,11 @@ $captions = @{
   '01-dashboard' = @('Your whole server at a glance', 'Players, FPS and charts, live')
   '02-console'   = @('The live console', 'Search, filter and run any command')
   '03-players'   = @('Everyone online', 'Ping, time played and health')
-  '04-actions'   = @('One tap to act', 'Kick, ban, mute, teleport, give items')
+  '04-card'      = @('Know who you are dealing with', 'Steam profile, bans and hours at a glance')
   '05-chat'      = @('Chat like the game', 'Name colours, team and plugin tags')
   '06-overview'  = @('All your servers', 'Status, players and FPS side by side')
   '07-plugins'   = @('Carbon and Oxide plugins', 'Sort, reload, load and unload')
+  '08-watchlist' = @('Watch the players that matter', 'Get told the moment they join')
 }
 
 function New-RoundedPath([float]$x, [float]$y, [float]$w, [float]$h, [float]$r) {
